@@ -1,6 +1,6 @@
-import { DataSource, QueryRunner, SelectQueryBuilder } from "typeorm";
-import { DB_DATABASE, DB_HOST, DB_PASSWORD, DB_PORT, DB_USERNAME } from "../env";
-import { todoModuleDbDataSourceEntity } from "../../modules/todos";
+import { DataSource, QueryRunner, SelectQueryBuilder } from 'typeorm';
+import { DB_DATABASE, DB_HOST, DB_PASSWORD, DB_PORT, DB_USERNAME } from '../env';
+import { todoModuleDbDataSourceEntity } from '../../modules/todos';
 
 export const dbDataSource = new DataSource({
 	type: 'postgres',
@@ -11,11 +11,9 @@ export const dbDataSource = new DataSource({
 	database: DB_DATABASE,
 	synchronize: false,
 	logging: true,
-	entities: [
-    ...todoModuleDbDataSourceEntity
-	],
+	entities: [...todoModuleDbDataSourceEntity],
 	subscribers: [],
-	migrations: ['src/migration/**/*.ts']
+	migrations: ['src/migration/**/*.ts'],
 });
 
 async function initializeDatabase() {

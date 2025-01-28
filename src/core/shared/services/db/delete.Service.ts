@@ -1,51 +1,54 @@
-import { Err, Ok, Result } from "neverthrow";
-import { DataSource, QueryRunner } from "typeorm";
-import { ResultError } from "../../utils/exceptions/results";
-import Container, { Service } from "typedi";
-import { DtoValidation, IDtoValidation } from "../../utils/validations/dto";
-import { dbDataSource } from "../../../config/dbSource";
-import { StatusCodes } from "http-status-codes";
-import { StatusEnum } from "../../models/enums/status.enum";
+import { Err, Ok, Result } from 'neverthrow';
+import { DataSource, QueryRunner } from 'typeorm';
+import { ResultError } from '../../utils/exceptions/results';
+import Container, { Service } from 'typedi';
+import { DtoValidation, IDtoValidation } from '../../utils/validations/dto';
+import { dbDataSource } from '../../../config/dbSource';
+import { StatusCodes } from 'http-status-codes';
+import { StatusEnum } from '../../models/enums/status.enum';
 
-export interface IDeleteService<TInput, TOutput>{
-  handleAsync(params: TInput,queryRunner?:QueryRunner): Promise<Result<TOutput | null, ResultError>>;
+export interface IDeleteService<TInput, TOutput> {
+	handleAsync(
+		params: TInput,
+		queryRunner?: QueryRunner
+	): Promise<Result<TOutput | null, ResultError>>;
 }
 
 @Service()
-export class DeleteService<T extends object> implements IDeleteService<T,T>{
+export class DeleteService<T extends object> implements IDeleteService<T, T> {
+	private readonly db: DataSource;
+	private readonly dtoValidation: IDtoValidation<T>;
 
-  private readonly db: DataSource;
-  private readonly dtoValidation:IDtoValidation<T>;
-
-  public constructor(entity: new () => T){
-    this.db = dbDataSource;
+	public constructor(entity: new () => T) {
+		this.db = dbDataSource;
 		this.entity = entity;
-    this.dtoValidation=Container.get(DtoValidation<T>);
-  }
+		this.dtoValidation = Container.get(DtoValidation<T>);
+	}
 
-  private entity: new () => T;
+	private entity: new () => T;
 
-  public async handleAsync(params: T, queryRunner?: QueryRunner): Promise<Result<T | null, ResultError>> {
-    try
-    {
-      if('identifier' in (params as any)===false)
-        return new Err(new ResultError(StatusCodes.BAD_REQUEST, 'Identifier is required'));
+	public async handleAsync(
+		params: T,
+		queryRunner?: QueryRunner
+	): Promise<Result<T | null, ResultError>> {
+		try {
+			if ('identifier' in (params as any) === false)
+				return new Err(new ResultError(StatusCodes.BAD_REQUEST, 'Identifier is required'));
 
-      if('status' in (params as any)===false)
-        return new Err(new ResultError(StatusCodes.BAD_REQUEST, 'Status is required'));
+			if ('status' in (params as any) === false)
+				return new Err(new ResultError(StatusCodes.BAD_REQUEST, 'Status is required'));
 
-      // Validate Entity
-      const validationResult = await this.dtoValidation.handleAsync({
-        dto: params,
-        dtoClass: (params as any).constructor,
-      });
-      if(validationResult.isErr())
-        return new Err(validationResult.error);
+			// Validate Entity
+			const validationResult = await this.dtoValidation.handleAsync({
+				dto: params,
+				dtoClass: (params as any).constructor,
+			});
+			if (validationResult.isErr()) return new Err(validationResult.error);
 
-      // Run Query Runner
+			// Run Query Runner
 			const entityManager = queryRunner ? queryRunner.manager : this.db.manager;
 
-      // Update Query
+			// Update Query
 			const result = await entityManager
 				.createQueryBuilder()
 				.update(this.entity)
@@ -55,17 +58,15 @@ export class DeleteService<T extends object> implements IDeleteService<T,T>{
 				})
 				.execute();
 
-      // Check if insert is successfully
+			// Check if insert is successfully
 			if (result.affected === 0)
-				return new Err(new ResultError(StatusCodes.NOT_FOUND,'entity not found'));
+				return new Err(new ResultError(StatusCodes.NOT_FOUND, 'entity not found'));
 
 			// Get Entity
 			return new Ok(params);
-    }
-    catch(ex){
-    const error = ex as Error;
-      return new Err(new ResultError(StatusCodes.INTERNAL_SERVER_ERROR, error.message));
-    }
-  }
-
+		} catch (ex) {
+			const error = ex as Error;
+			return new Err(new ResultError(StatusCodes.INTERNAL_SERVER_ERROR, error.message));
+		}
+	}
 }

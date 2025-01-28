@@ -1,6 +1,6 @@
-import { DataSource, DataSourceOptions } from "typeorm";
-import { DB_DATABASE, DB_HOST, DB_PASSWORD, DB_PORT, DB_USERNAME } from "../env";
-import { ToDoEntity } from "../../modules/todos/infrastructures/entity/todos/index.Entity";
+import { DataSource, DataSourceOptions } from 'typeorm';
+import { DB_DATABASE, DB_HOST, DB_PASSWORD, DB_PORT, DB_USERNAME } from '../env';
+import { ToDoEntity } from '../../modules/todos/infrastructures/entity/todos/index.Entity';
 
 /*
     Generate:
@@ -18,9 +18,7 @@ const connectionOptions: DataSourceOptions = {
 	database: DB_DATABASE,
 	synchronize: false,
 	logging: true,
-	entities: [
-    ToDoEntity
-	],
+	entities: [ToDoEntity],
 	subscribers: [],
 	migrations: ['src/core/config/dbMigrations/migrations/**/*.ts'],
 	migrationsTableName: 'custom_migration_table',

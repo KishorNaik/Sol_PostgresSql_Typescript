@@ -2,7 +2,6 @@ import { IsNotEmpty, IsUUID } from 'class-validator';
 import { Column, CreateDateColumn, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { StatusEnum } from '../../models/enums/status.enum';
 
-
 export class BaseEntity {
 	@PrimaryGeneratedColumn('increment', { type: 'bigint', unsigned: true })
 	public id?: number;

@@ -9,5 +9,4 @@ export {
 	SelectQueryBuilder,
 } from './config/dbSource/index';
 
-
-export * from '../core/modules/todos/index'
+export * from '../core/modules/todos/index';

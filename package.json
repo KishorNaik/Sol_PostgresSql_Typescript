@@ -70,7 +70,7 @@
 		"winston": "^3.17.0",
 		"winston-daily-rotate-file": "^5.0.0"
 	},
-  "publishConfig": {
+	"publishConfig": {
 		"registry": "https://npm.pkg.github.com"
 	},
 	"files": [
