@@ -1,13 +1,12 @@
 import { Err, Ok, Result } from 'neverthrow';
 import { DataSource, QueryRunner } from 'typeorm';
-import { ResultError } from '../../utils/exceptions/results';
+import { ResultError } from '../../../utils/exceptions/results';
 import Container, { Service } from 'typedi';
-import { DtoValidation, IDtoValidation } from '../../utils/validations/dto';
-import { dbDataSource } from '../../../config/dbSource';
+import { DtoValidation, IDtoValidation } from '../../../utils/validations/dto';
+import { dbDataSource } from '../../../../config/dbSource';
 import { StatusCodes } from 'http-status-codes';
-import { StatusEnum } from '../../models/enums/status.enum';
 
-export interface IDeleteService<TInput, TOutput> {
+export interface IGetByIdentifierService<TInput, TOutput> {
 	handleAsync(
 		params: TInput,
 		queryRunner?: QueryRunner
@@ -15,12 +14,10 @@ export interface IDeleteService<TInput, TOutput> {
 }
 
 @Service()
-export class DeleteService<T extends object> implements IDeleteService<T, T> {
-	private readonly db: DataSource;
+export class GetByIdentifierService<T extends object> implements IGetByIdentifierService<T, T> {
 	private readonly dtoValidation: IDtoValidation<T>;
 
 	public constructor(entity: new () => T) {
-		this.db = dbDataSource;
 		this.entity = entity;
 		this.dtoValidation = Container.get(DtoValidation<T>);
 	}
@@ -46,24 +43,24 @@ export class DeleteService<T extends object> implements IDeleteService<T, T> {
 			if (validationResult.isErr()) return new Err(validationResult.error);
 
 			// Run Query Runner
-			const entityManager = queryRunner ? queryRunner.manager : this.db.manager;
-
-			// Update Query
-			const result = await entityManager
-				.createQueryBuilder()
-				.update(this.entity)
-				.set({ status: StatusEnum.INACTIVE })
-				.where('identifier  = :identifier ', {
-					identifier: (params as any).identifier,
-				})
-				.execute();
-
-			// Check if insert is successfully
-			if (result.affected === 0)
-				return new Err(new ResultError(StatusCodes.NOT_FOUND, 'entity not found'));
+			const entityManager = queryRunner ? queryRunner.manager : dbDataSource.manager;
 
 			// Get Entity
-			return new Ok(params);
+			const result = await entityManager
+				.createQueryBuilder(this.entity, 'entity')
+				.where('entity.identifier = :identifier', {
+					identifier: (params as any).identifier,
+				})
+				.andWhere('entity.status = :status', {
+					status: (params as any).status,
+				})
+				.getOne();
+
+			// Check if get is successfully
+			if (!result) return new Err(new ResultError(StatusCodes.NOT_FOUND, 'entity not found'));
+
+			// Get Entity
+			return new Ok(result as T);
 		} catch (ex) {
 			const error = ex as Error;
 			return new Err(new ResultError(StatusCodes.INTERNAL_SERVER_ERROR, error.message));

@@ -1,44 +1,30 @@
 import { Err, Ok, Result } from 'neverthrow';
 import { DataSource, QueryRunner, SelectQueryBuilder } from 'typeorm';
-import { PagedList } from '../../utils/miscellaneous/pageList';
-import { ResultError } from '../../utils/exceptions/results';
+import { PagedList } from '../../../utils/miscellaneous/pageList';
+import { ResultError } from '../../../utils/exceptions/results';
 import { ObjectLiteral } from 'typeorm';
-import { DtoValidation, IDtoValidation } from '../../utils/validations/dto';
-import { dbDataSource } from '../../../config/dbSource';
-import Container from 'typedi';
+import { DtoValidation, IDtoValidation } from '../../../utils/validations/dto';
+import { dbDataSource } from '../../../../config/dbSource';
+import Container, { Service } from 'typedi';
 import { StatusCodes } from 'http-status-codes';
-
-export interface IPagination {
-	pageNumber: number;
-	pageSize: number;
-}
-
-export enum Order {
-	ASC,
-	DESC,
-}
-
-export interface ISort {
-	by: string[];
-	direction: Order;
-}
+import { IPagination } from '../../../models/types/pagination';
+import { ISort, Order } from '../../../models/types/order';
 
 export interface IGetService<TInput extends ObjectLiteral, TOutput extends object> {
 	handleAsync(
 		params: TInput,
 		pagination?: IPagination | null,
-		addWhereClauses?: (queryBuilder: SelectQueryBuilder<TInput>) => void | null,
+		//addWhereClauses?: (queryBuilder: SelectQueryBuilder<TInput>) => void | null,
 		sort?: ISort | null,
 		queryRunner?: QueryRunner
 	): Promise<Result<PagedList<TOutput>, ResultError>>;
 }
 
+@Service()
 export class GetService<T extends object> implements IGetService<T, T> {
-	private readonly db: DataSource;
 	private readonly dtoValidation: IDtoValidation<T>;
 
 	public constructor(entity: new () => T) {
-		this.db = dbDataSource;
 		this.entity = entity;
 		this.dtoValidation = Container.get(DtoValidation<T>);
 	}
@@ -48,7 +34,7 @@ export class GetService<T extends object> implements IGetService<T, T> {
 	public async handleAsync(
 		params: T,
 		pagination: IPagination | null,
-		addWhereClauses?: ((queryBuilder: SelectQueryBuilder<T>) => void) | null,
+		//addWhereClauses?: ((queryBuilder: SelectQueryBuilder<T>) => void) | null,
 		sort?: ISort | null,
 		queryRunner?: QueryRunner
 	): Promise<Result<PagedList<T>, ResultError>> {
@@ -64,7 +50,7 @@ export class GetService<T extends object> implements IGetService<T, T> {
 			if (validationResult.isErr()) return new Err(validationResult.error);
 
 			// Run Query Runner
-			const entityManager = queryRunner ? queryRunner.manager : this.db.manager;
+			const entityManager = queryRunner ? queryRunner.manager : dbDataSource.manager;
 
 			// Create Query Builder
 			let queryBuilder: SelectQueryBuilder<T> = entityManager
@@ -74,9 +60,9 @@ export class GetService<T extends object> implements IGetService<T, T> {
 				});
 
 			// Add dynamic where clauses via callback
-			if (addWhereClauses) {
-				addWhereClauses(queryBuilder);
-			}
+			// if (addWhereClauses) {
+			// 	addWhereClauses(queryBuilder);
+			// }
 
 			// Apply sorting
 			if (sort && sort.by.length > 0) {

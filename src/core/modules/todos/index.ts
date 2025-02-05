@@ -1,5 +1,7 @@
 import { AddTodosService } from './apps/features/v1/addTodos';
-import { GetByIdTodoService } from './apps/features/v1/getByIdTodos';
+import { GetByIdentifierTodoService } from './apps/features/v1/getByIdTodos';
+import { GetTodoService } from './apps/features/v1/getTodos';
+import { GetTodosRowVersionService } from './apps/features/v1/getVersion';
 import { RemoveTodosService } from './apps/features/v1/removeTodos';
 import { UpdateTodosService } from './apps/features/v1/updateTodos';
 import { ToDoEntity } from './infrastructures/entity/todos/index.Entity';
@@ -11,4 +13,11 @@ export const todoModuleDbDataSourceEntity: Function[] = [ToDoEntity];
 export { ToDoEntity };
 
 // Export Service
-export { AddTodosService, GetByIdTodoService, RemoveTodosService, UpdateTodosService };
+export {
+	AddTodosService,
+	GetByIdentifierTodoService,
+	RemoveTodosService,
+	UpdateTodosService,
+	GetTodoService,
+	GetTodosRowVersionService,
+};

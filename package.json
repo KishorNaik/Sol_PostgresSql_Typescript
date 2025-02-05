@@ -1,5 +1,5 @@
 {
-	"name": "@orgname/packagename",
+	"name": "@kishornaik/todo-db-library",
 	"version": "1.0.0",
 	"description": "",
 	"main": "dist/core/index.js",

@@ -1,21 +1,15 @@
-import { IsNumber, IsOptional } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsNumber, IsOptional, IsPositive } from 'class-validator';
 
 export class PaginationQueryStringParametersModel {
-	private static readonly maxPageSize = 50;
 
-	@IsNumber()
-	public pageNumber = 1;
-	private _pageSize = 10;
+	@Transform(({ value }) => parseInt(value, 10) || 1)
+  @IsNumber()
+  @IsPositive()
+  public pageNumber: number = 1;
 
-	@IsNumber()
-	public get pageSize(): number {
-		return this._pageSize;
-	}
-
-	public set pageSize(value: number) {
-		this._pageSize =
-			value > PaginationQueryStringParametersModel.maxPageSize
-				? PaginationQueryStringParametersModel.maxPageSize
-				: value;
-	}
+  @Transform(({ value }) => parseInt(value, 10) || 10)
+  @IsNumber()
+  @IsPositive()
+  public pageSize: number = 10;
 }

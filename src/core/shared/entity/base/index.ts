@@ -1,5 +1,12 @@
 import { IsNotEmpty, IsUUID } from 'class-validator';
-import { Column, CreateDateColumn, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import {
+	Column,
+	CreateDateColumn,
+	Index,
+	PrimaryGeneratedColumn,
+	UpdateDateColumn,
+	VersionColumn,
+} from 'typeorm';
 import { StatusEnum } from '../../models/enums/status.enum';
 
 export class BaseEntity {
@@ -29,4 +36,7 @@ export class BaseEntity {
 		onUpdate: 'CURRENT_TIMESTAMP(6)',
 	})
 	public modified_date?: Date;
+
+	@VersionColumn()
+	public version?: number;
 }

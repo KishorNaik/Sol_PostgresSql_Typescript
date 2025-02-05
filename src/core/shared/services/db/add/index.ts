@@ -1,12 +1,13 @@
 import { Err, Ok, Result } from 'neverthrow';
-import { DataSource, QueryRunner } from 'typeorm';
-import { ResultError } from '../../utils/exceptions/results';
 import Container, { Service } from 'typedi';
-import { DtoValidation, IDtoValidation } from '../../utils/validations/dto';
-import { dbDataSource } from '../../../config/dbSource';
+import { DataSource, QueryRunner } from 'typeorm';
 import { StatusCodes } from 'http-status-codes';
+import { ResultError } from '../../../utils/exceptions/results';
+import { DtoValidation, IDtoValidation } from '../../../utils/validations/dto';
+import { dbDataSource } from '../../../../config/dbSource';
+import { logger } from '../../../utils/helpers/loggers';
 
-export interface IUpdateService<TInput, TOutput> {
+export interface IAddService<TInput, TOutput> {
 	handleAsync(
 		params: TInput,
 		queryRunner?: QueryRunner
@@ -14,12 +15,10 @@ export interface IUpdateService<TInput, TOutput> {
 }
 
 @Service()
-export class UpdateService<T extends object> implements IUpdateService<T, T> {
-	private readonly db: DataSource;
+export class AddService<T extends object> implements IAddService<T, T> {
 	private readonly dtoValidation: IDtoValidation<T>;
 
 	public constructor(entity: new () => T) {
-		this.db = dbDataSource;
 		this.entity = entity;
 		this.dtoValidation = Container.get(DtoValidation<T>);
 	}
@@ -33,9 +32,13 @@ export class UpdateService<T extends object> implements IUpdateService<T, T> {
 		try {
 			if ('identifier' in (params as any) === false)
 				return new Err(new ResultError(StatusCodes.BAD_REQUEST, 'Identifier is required'));
+			//logger.info(`identifier: ${(params as any).identifier}`);
 
 			if ('status' in (params as any) === false)
 				return new Err(new ResultError(StatusCodes.BAD_REQUEST, 'Status is required'));
+			//logger.info(`status: ${(params as any).status}`);
+
+			//logger.info(`Params: ${JSON.stringify(params)}`);
 
 			// Validate Entity
 			const validationResult = await this.dtoValidation.handleAsync({
@@ -43,28 +46,36 @@ export class UpdateService<T extends object> implements IUpdateService<T, T> {
 				dtoClass: (params as any).constructor,
 			});
 			if (validationResult.isErr()) return new Err(validationResult.error);
+			logger.info(`validationResult passed`);
 
 			// Run Query Runner
-			const entityManager = queryRunner ? queryRunner.manager : this.db.manager;
+			const entityManager = queryRunner ? queryRunner.manager : dbDataSource.manager;
+			logger.info(`entityManager passed`);
+			logger.info(`entity manager:${entityManager.hasId}`);
 
-			// Update Query
+			// Insert Query
 			const result = await entityManager
 				.createQueryBuilder()
-				.update(this.entity)
-				.set(params!)
-				.where('identifier  = :identifier ', {
-					identifier: (params as any).identifier,
-				})
+				.insert()
+				.into(this.entity)
+				.values(params!)
 				.execute();
+			logger.info(`Insert Query Executed`);
 
 			// Check if insert is successfully
-			if (result.affected === 0)
-				return new Err(new ResultError(StatusCodes.NOT_FOUND, 'entity not found'));
+			if (!result.identifiers[0].id)
+				return new Err(
+					new ResultError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to insert entity')
+				);
+			logger.info(`Insert passed`);
+			logger.info(`id: ${result.identifiers[0].id}`);
 
 			// Get Entity
 			return new Ok(params);
 		} catch (ex) {
 			const error = ex as Error;
+			console.log(`Error: ${error}`);
+			logger.error(`Error message: ${error.message}`);
 			return new Err(new ResultError(StatusCodes.INTERNAL_SERVER_ERROR, error.message));
 		}
 	}

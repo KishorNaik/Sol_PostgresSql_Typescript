@@ -10,7 +10,7 @@ import { ToDoEntity } from '../../infrastructures/entity/todos/index.Entity';
 import { faker } from '@faker-js/faker';
 import { StatusEnum } from '../../../../shared/models/enums/status.enum';
 import { v4 as uuidv4 } from 'uuid';
-import { GetByIdTodoService } from '../../apps/features/v1/getByIdTodos';
+import { GetByIdentifierTodoService } from '../../apps/features/v1/getByIdTodos';
 
 // Debug Mode:All Test Case Run
 //node --trace-deprecation --test --require ts-node/register -r tsconfig-paths/register ./src/core/modules/todos/tests/getByIdTodos/index.test.ts
@@ -45,7 +45,7 @@ describe(`get_by_id_todos`, () => {
 
 		await queryRunner.startTransaction();
 
-		const result = await new GetByIdTodoService().handleAsync(todoEntity, queryRunner);
+		const result = await new GetByIdentifierTodoService().handleAsync(todoEntity, queryRunner);
 		if (result.isErr()) {
 			await queryRunner.rollbackTransaction();
 			expect(result.isErr()).toBe(true);
@@ -68,7 +68,7 @@ describe(`get_by_id_todos`, () => {
 
 		await queryRunner.startTransaction();
 
-		const result = await new GetByIdTodoService().handleAsync(todoEntity, queryRunner);
+		const result = await new GetByIdentifierTodoService().handleAsync(todoEntity, queryRunner);
 		if (result.isErr()) {
 			await queryRunner.rollbackTransaction();
 			expect(result.isErr()).toBe(true);
@@ -91,7 +91,7 @@ describe(`get_by_id_todos`, () => {
 
 		await queryRunner.startTransaction();
 
-		const result = await new GetByIdTodoService().handleAsync(todoEntity, queryRunner);
+		const result = await new GetByIdentifierTodoService().handleAsync(todoEntity, queryRunner);
 		if (result.isErr()) {
 			await queryRunner.rollbackTransaction();
 			expect(result.isErr()).toBe(true);
@@ -114,7 +114,7 @@ describe(`get_by_id_todos`, () => {
 
 		await queryRunner.startTransaction();
 
-		const result = await new GetByIdTodoService().handleAsync(todoEntity, queryRunner);
+		const result = await new GetByIdentifierTodoService().handleAsync(todoEntity, queryRunner);
 		if (result.isErr()) {
 			await queryRunner.rollbackTransaction();
 			expect(result.isErr()).toBe(true);

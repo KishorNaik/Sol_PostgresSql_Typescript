@@ -23,5 +23,13 @@
 	"module": {
 		"type": "commonjs"
 	},
-	"exclude": ["node_modules", "build", "dist", "src/test/**/*", "src/examples/**/*"]
+	"exclude": [
+		"node_modules",
+		"build",
+		"dist",
+		"src/test/**/*",
+		"src/examples/**/*",
+		"src",
+		"logs"
+	]
 }

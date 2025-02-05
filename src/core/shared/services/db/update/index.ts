@@ -1,12 +1,12 @@
 import { Err, Ok, Result } from 'neverthrow';
-import { ResultError } from '../../utils/exceptions/results';
-import Container, { Service } from 'typedi';
 import { DataSource, QueryRunner } from 'typeorm';
+import { ResultError } from '../../../utils/exceptions/results';
+import Container, { Service } from 'typedi';
+import { DtoValidation, IDtoValidation } from '../../../utils/validations/dto';
+import { dbDataSource } from '../../../../config/dbSource';
 import { StatusCodes } from 'http-status-codes';
-import { DtoValidation, IDtoValidation } from '../../utils/validations/dto';
-import { dbDataSource } from '../../../config/dbSource';
 
-export interface IAddService<TInput, TOutput> {
+export interface IUpdateService<TInput, TOutput> {
 	handleAsync(
 		params: TInput,
 		queryRunner?: QueryRunner
@@ -14,12 +14,10 @@ export interface IAddService<TInput, TOutput> {
 }
 
 @Service()
-export class AddService<T extends object> implements IAddService<T, T> {
-	private readonly db: DataSource;
+export class UpdateService<T extends object> implements IUpdateService<T, T> {
 	private readonly dtoValidation: IDtoValidation<T>;
 
 	public constructor(entity: new () => T) {
-		this.db = dbDataSource;
 		this.entity = entity;
 		this.dtoValidation = Container.get(DtoValidation<T>);
 	}
@@ -45,21 +43,21 @@ export class AddService<T extends object> implements IAddService<T, T> {
 			if (validationResult.isErr()) return new Err(validationResult.error);
 
 			// Run Query Runner
-			const entityManager = queryRunner ? queryRunner.manager : this.db.manager;
+			const entityManager = queryRunner ? queryRunner.manager : dbDataSource.manager;
 
-			// Insert Query
+			// Update Query
 			const result = await entityManager
 				.createQueryBuilder()
-				.insert()
-				.into(this.entity)
-				.values(params!)
+				.update(this.entity)
+				.set(params!)
+				.where('identifier  = :identifier ', {
+					identifier: (params as any).identifier,
+				})
 				.execute();
 
 			// Check if insert is successfully
-			if (!result.identifiers[0].id)
-				return new Err(
-					new ResultError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to insert entity')
-				);
+			if (result.affected === 0)
+				return new Err(new ResultError(StatusCodes.NOT_FOUND, 'entity not found'));
 
 			// Get Entity
 			return new Ok(params);

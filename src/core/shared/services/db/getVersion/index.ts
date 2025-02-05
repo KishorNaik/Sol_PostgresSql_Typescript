@@ -1,25 +1,30 @@
 import { Err, Ok, Result } from 'neverthrow';
 import { DataSource, QueryRunner } from 'typeorm';
-import { ResultError } from '../../utils/exceptions/results';
+import { ResultError } from '../../../utils/exceptions/results';
 import Container, { Service } from 'typedi';
-import { DtoValidation, IDtoValidation } from '../../utils/validations/dto';
-import { dbDataSource } from '../../../config/dbSource';
+import { DtoValidation, IDtoValidation } from '../../../utils/validations/dto';
+import { dbDataSource } from '../../../../config/dbSource';
 import { StatusCodes } from 'http-status-codes';
 
-export interface IGetByIdService<TInput, TOutput> {
+export interface IGetVersionByIdentifierServiceResult {
+	identifier: string;
+	version: number;
+}
+
+export interface IGetVersionByIdentifierService<TInput> {
 	handleAsync(
 		params: TInput,
 		queryRunner?: QueryRunner
-	): Promise<Result<TOutput | null, ResultError>>;
+	): Promise<Result<IGetVersionByIdentifierServiceResult | null, ResultError>>;
 }
 
 @Service()
-export class GetByIdService<T extends object> implements IGetByIdService<T, T> {
-	private readonly db: DataSource;
+export class GetByVersionIdentifierService<T extends object>
+	implements IGetVersionByIdentifierService<T>
+{
 	private readonly dtoValidation: IDtoValidation<T>;
 
 	public constructor(entity: new () => T) {
-		this.db = dbDataSource;
 		this.entity = entity;
 		this.dtoValidation = Container.get(DtoValidation<T>);
 	}
@@ -29,7 +34,8 @@ export class GetByIdService<T extends object> implements IGetByIdService<T, T> {
 	public async handleAsync(
 		params: T,
 		queryRunner?: QueryRunner
-	): Promise<Result<T | null, ResultError>> {
+	): Promise<Result<IGetVersionByIdentifierServiceResult | null, ResultError>> {
+		let response: IGetVersionByIdentifierServiceResult | null = null;
 		try {
 			if ('identifier' in (params as any) === false)
 				return new Err(new ResultError(StatusCodes.BAD_REQUEST, 'Identifier is required'));
@@ -45,11 +51,12 @@ export class GetByIdService<T extends object> implements IGetByIdService<T, T> {
 			if (validationResult.isErr()) return new Err(validationResult.error);
 
 			// Run Query Runner
-			const entityManager = queryRunner ? queryRunner.manager : this.db.manager;
+			const entityManager = queryRunner ? queryRunner.manager : dbDataSource.manager;
 
 			// Get Entity
 			const result = await entityManager
 				.createQueryBuilder(this.entity, 'entity')
+				.select(['entity.identifier', 'entity.version'])
 				.where('entity.identifier = :identifier', {
 					identifier: (params as any).identifier,
 				})
@@ -61,8 +68,20 @@ export class GetByIdService<T extends object> implements IGetByIdService<T, T> {
 			// Check if get is successfully
 			if (!result) return new Err(new ResultError(StatusCodes.NOT_FOUND, 'entity not found'));
 
-			// Get Entity
-			return new Ok(result as T);
+			const entity = result as any;
+
+			if ('identifier' in entity && 'version' in entity) {
+				response = {
+					identifier: entity.identifier,
+					version: entity.version,
+				};
+			}
+
+			if (!response)
+				return new Err(new ResultError(StatusCodes.NOT_FOUND, 'Version row not found'));
+
+			// Return response
+			return new Ok(response);
 		} catch (ex) {
 			const error = ex as Error;
 			return new Err(new ResultError(StatusCodes.INTERNAL_SERVER_ERROR, error.message));

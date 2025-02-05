@@ -1,10 +1,16 @@
-import { Service } from 'typedi';
+import Container, { Service } from 'typedi';
 import { ToDoEntity } from '../../../../infrastructures/entity/todos/index.Entity';
-import { DeleteService } from '../../../../../../shared/services/db/delete.Service';
-import { GetByIdService } from '../../../../../../shared/services/db/getById.Service';
+import { DeleteService } from '../../../../../../shared/services/db/delete';
+import { GetByIdentifierService } from '../../../../../../shared/services/db/getByIdentifer';
+
+// @Service decorator is not working if constructor has the parameters, then set the container.
+Container.set<GetByIdentifierService<ToDoEntity>>(
+  GetByIdentifierService<ToDoEntity>,
+  new GetByIdentifierService<ToDoEntity>(ToDoEntity)
+);
 
 @Service()
-export class GetByIdTodoService extends GetByIdService<ToDoEntity> {
+export class GetByIdentifierTodoService extends GetByIdentifierService<ToDoEntity> {
 	public constructor() {
 		super(ToDoEntity);
 	}
