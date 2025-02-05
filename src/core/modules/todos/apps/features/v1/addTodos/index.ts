@@ -5,7 +5,10 @@ import { AddService } from '../../../../../../shared/services/db/add';
 //import { ToDoEntity } from '../../../../infrastructures/entity/todos/index.Entity';
 
 // @Service decorator is not working if constructor has the parameters, then set the container.
-Container.set<AddService<ToDoEntity>>(AddService<ToDoEntity>, new AddService<ToDoEntity>(ToDoEntity));
+Container.set<AddService<ToDoEntity>>(
+	AddService<ToDoEntity>,
+	new AddService<ToDoEntity>(ToDoEntity)
+);
 
 @Service()
 export class AddTodosService extends AddService<ToDoEntity> {

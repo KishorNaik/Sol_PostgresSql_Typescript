@@ -5,8 +5,8 @@ import { GetByIdentifierService } from '../../../../../../shared/services/db/get
 
 // @Service decorator is not working if constructor has the parameters, then set the container.
 Container.set<GetByIdentifierService<ToDoEntity>>(
-  GetByIdentifierService<ToDoEntity>,
-  new GetByIdentifierService<ToDoEntity>(ToDoEntity)
+	GetByIdentifierService<ToDoEntity>,
+	new GetByIdentifierService<ToDoEntity>(ToDoEntity)
 );
 
 @Service()

@@ -4,7 +4,10 @@ import { GetByVersionIdentifierService } from '../../../../../../shared/services
 import { ToDoEntity } from '../../../../infrastructures/entity/todos/index.Entity';
 
 // @Service decorator is not working if constructor has the parameters, then set the container.
-Container.set<GetByVersionIdentifierService<ToDoEntity>>(GetByVersionIdentifierService<ToDoEntity>, new GetByVersionIdentifierService<ToDoEntity>(ToDoEntity));
+Container.set<GetByVersionIdentifierService<ToDoEntity>>(
+	GetByVersionIdentifierService<ToDoEntity>,
+	new GetByVersionIdentifierService<ToDoEntity>(ToDoEntity)
+);
 
 @sealed
 @Service()

@@ -1,4 +1,4 @@
-import { PaginationDataResponseModel } from "../../response/data.Response";
+import { PaginationDataResponseModel } from '../../response/data.Response';
 
 export interface IPagination {
 	pageNumber: number;
